@@ -1,6 +1,6 @@
 # Ansible Integration in Jenkins (CD)
 
-![Project Architecture](suggested_image: diagram showing the relationship between Jenkins, Ansible Control Node, and EC2 instances)
+![diagram](https://github.com/Princeton45/ansible-jenkins-integration/blob/main/images/diagram.png)
 
 ## Overview
 
