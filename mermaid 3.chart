@@ -1,0 +1,35 @@
+flowchart LR
+    Trigger((Pipeline_Triggered)) --> Jenkins[Jenkins_Server]
+    Jenkins -->|SSH| AnsibleCN[Ansible_Control_Node]
+    
+    subgraph "Ansible Control Node"
+        AnsibleCN -->|1.Copy| Playbooks[Ansible_Playbooks]
+        AnsibleCN -->|2.Copy| Config[Ansible_Config_Files]
+        AnsibleCN -->|3.Copy| SSHKeys[SSH_Keys]
+        AnsibleCN -->|4.Install| Software[Ansible_Python3_Boto3]
+        Playbooks --> PlaybookRun[Playbook_Execution]
+        Config --> PlaybookRun
+        SSHKeys --> PlaybookRun
+        Software --> PlaybookRun
+    end
+    
+    PlaybookRun -->|Configure| EC2_1[EC2_Instance_1]
+    PlaybookRun -->|Configure| EC2_2[EC2_Instance_2]
+    
+    EC2_1 -->|Success| Complete((Deployment_Complete))
+    EC2_2 -->|Success| Complete
+
+    %% Styling
+    classDef trigger fill:#9c27b0,color:white
+    classDef jenkins fill:#1976d2,color:white
+    classDef ansible fill:#e53935,color:white
+    classDef components fill:#43a047,color:white
+    classDef ec2 fill:#ff9800,color:white
+    classDef complete fill:#26a69a,color:white
+    
+    class Trigger trigger
+    class Jenkins jenkins
+    class AnsibleCN ansible
+    class Playbooks,Config,SSHKeys,Software,PlaybookRun components
+    class EC2_1,EC2_2 ec2
+    class Complete complete
