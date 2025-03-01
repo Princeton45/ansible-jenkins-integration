@@ -31,13 +31,23 @@ My Jenkinsfile implements the following workflow:
 
 ## Implementation Steps
 
+
 ### Server Setup
 
-I created a dedicated server for Jenkins using DigitalOcean, installing and configuring it to handle our CI/CD needs.
+I created a dedicated server for Jenkins using DigitalOcean, installing and configuring it to handle our CD (Continuous Deployment) needs.
 
-![Jenkins Dashboard](suggested_image: screenshot of Jenkins dashboard with jobs)
+![jenkins](https://github.com/Princeton45/ansible-jenkins-integration/blob/main/images/jenkins.png)
 
 For Ansible, I set up a separate control node server, also on DigitalOcean, which serves as the central point for running playbooks.
+
+![ansible-server](https://github.com/Princeton45/ansible-jenkins-integration/blob/main/images/ansible-server.png)
+
+I then created 2 EC2 instances that will be managed and configured by the Ansible server.
+
+I also created a key pair for the instances so Ansible can use it to authenticate to them.
+
+![ec2](https://github.com/Princeton45/ansible-jenkins-integration/blob/main/images/ec2.png)
+
 
 ### Ansible Configuration
 
@@ -49,7 +59,7 @@ I wrote an Ansible playbook that configures two EC2 instances with all necessary
 
 I added SSH key file credentials in Jenkins for both the Ansible Control Node server and the Ansible Managed Node servers, ensuring secure communication between all components.
 
-The Jenkins pipeline was configured to execute the Ansible playbook on the remote Control Node as part of the CI/CD process.
+The Jenkins pipeline was configured to execute the Ansible playbook on the remote Control Node as part of the CD process.
 
 
 ![Pipeline Execution](suggested_image: Jenkins pipeline execution results showing successful stages)
