@@ -88,23 +88,61 @@ The playbook also utilizes `ansible.cfg` for config settings and `inventory_aws_
         dest: ~/.docker/cli-plugins/docker-compose
         mode: +x
 ```
+
 ### Jenkins Integration
 
-I added SSH key file credentials in Jenkins for both the Ansible Control Node server and the Ansible Managed Node servers, ensuring secure communication between all components.
+I added SSH key file credentials in Jenkins for both the Ansible Control Node server and the Ansible Managed Node servers (`ansible-server-key` and `ec2-server-key`), so Jenkins can connect to the Ansible controller node and then Jenkins can copy the `ec2-server-key` credentials to the controller node to then execute the playbook.
+
+![ssh](https://github.com/Princeton45/ansible-jenkins-integration/blob/main/images/ssh.png)
+
 
 The Jenkins pipeline was configured to execute the Ansible playbook on the remote Control Node as part of the CD process.
 
+```groovy
+pipeline {
+    agent any
+    environment {
+        ANSIBLE_SERVER = "143.244.151.161"
+    }
+    stages {
+        stage("copy files to ansible server") {
+            steps {
+                script {
+                    echo "copying all necessary files to ansible control node"
+                    sshagent(['ansible-server-key']) {
+                        sh "scp -o StrictHostKeyChecking=no ansible/* root@${ANSIBLE_SERVER}:/root"
 
-![Pipeline Execution](suggested_image: Jenkins pipeline execution results showing successful stages)
+                        withCredentials([sshUserPrivateKey(credentialsId: 'ec2-server-key', keyFileVariable: 'keyfile', usernameVariable: 'user')]) {
+                            sh 'scp $keyfile root@$ANSIBLE_SERVER:/root/ssh-key.pem'
+                        }
+                    }
+                }
+            }
+        }
+        stage ("execute ansible playbook") {
+            steps {
+                script {
+                    echo "calling ansible playbook to configure ec2 instances"
+                    def remote = [:]
+                    remote.name = "ansible-server"
+                    remote.host = ANSIBLE_SERVER
+                    remote.allowAnyHosts = true
 
-## Results
+                    withCredentials([sshUserPrivateKey(credentialsId: 'ansible-server-key', keyFileVariable: 'keyfile', usernameVariable: 'user')]) {
+                        remote.user = user 
+                        remote.identityFile = keyfile
+                        sshScript remote: remote, script: "prepare-ansible-server.sh"
+                        sshCommand remote: remote, command: "ansible-playbook my-playbook.yaml"
+                    }
+                }
+            }
+        }
+    }
+}
+```
 
-This implementation creates a fully automated process for provisioning and configuring AWS EC2 instances. When the Jenkins pipeline runs, it triggers Ansible to ensure the target environments are consistently configured according to specifications.
+Now the pipeline runs successfully:
 
-![Complete Infrastructure](suggested_image: diagram or screenshot showing the fully configured system)
+![success1](https://github.com/Princeton45/ansible-jenkins-integration/blob/main/images/success1.png)
 
-## Future Improvements
 
-- Add more target environments beyond the initial two EC2 instances
-- Implement dynamic inventory management
-- Enhance error handling and notification systems
