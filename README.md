@@ -51,7 +51,7 @@ I also created a key pair for the instances so Ansible can use it to authenticat
 
 ### Ansible Configuration
 
-I wrote an Ansible playbook that configures two EC2 instances with all necessary services and dependencies. The playbook handles installation, configuration, and service management.
+I wrote an Ansible playbook that installs Docker and Docker Compose on the two EC2 instances.
 
 The playbook also utilizes `ansible.cfg` for config settings and `inventory_aws_ec2.yaml` for dynamic inventory
 
