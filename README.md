@@ -14,7 +14,7 @@ My Jenkinsfile implements the following workflow:
 2. Copies all Ansible playbooks and configuration files to the Control Node
 3. Transfers the required SSH keys for the Managed Node servers to the Controller node so the Controller Node can authenticate to the EC2 instances.
 4. Installs Ansible, Python3, and Boto3 on the Control Node if not already present
-5. Executes the playbook remotely to configure the two EC2 instances
+5. Executes the playbook remotely to configure the two EC2 instances (playbook installs Docker and Docker compose)
 
 ## Technologies Used
 
@@ -53,8 +53,41 @@ I also created a key pair for the instances so Ansible can use it to authenticat
 
 I wrote an Ansible playbook that configures two EC2 instances with all necessary services and dependencies. The playbook handles installation, configuration, and service management.
 
-![Ansible Playbook Structure](suggested_image: directory structure or code snippet of playbook)
+The playbook also utilizes `ansible.cfg` for config settings and `inventory_aws_ec2.yaml` for dynamic inventory
 
+`my-playbook.yaml`
+```yaml
+---
+- name: Install Docker
+  hosts: aws_ec2
+  become: yes
+  tasks:
+    - name: Install Docker
+      yum:
+        name: docker 
+        update_cache: yes
+        state: present
+    - name: Start docker daemon
+      systemd:
+        name: docker
+        state: started
+
+- name: Install Docker-compose
+  hosts: aws_ec2
+  tasks:
+    - name: Create docker-compose directory
+      file:
+        path: ~/.docker/cli-plugins
+        state: directory
+    - name: Get architecture of remote machine
+      shell: uname -m
+      register: remote_arch
+    - name: Install docker-compose
+      get_url: 
+        url: "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-{{ remote_arch.stdout }}"
+        dest: ~/.docker/cli-plugins/docker-compose
+        mode: +x
+```
 ### Jenkins Integration
 
 I added SSH key file credentials in Jenkins for both the Ansible Control Node server and the Ansible Managed Node servers, ensuring secure communication between all components.
